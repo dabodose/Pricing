@@ -51,9 +51,14 @@ User input: "${prompt}"`
                 max_tokens: 300
             })
         });
+        console.log('Response status:', response.status);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
+        console.log('API Response:', JSON.stringify(data));
+        if (!data.choices || !data.choices[0]) throw new Error('No choices in response');
         res.status(200).json({ reply: data.choices[0]?.message?.content || 'No reply', status: 'success' });
     } catch (error) {
+        console.error('Error:', error.message);
         res.status(500).json({ reply: `Failed: ${error.message}`, status: 'error' });
     }
 };
