@@ -14,7 +14,7 @@ export default async (req, res) => {
         });
 
         const sheets = google.sheets({ version: 'v4', auth });
-        const spreadsheetId = 'your-spreadsheet-id'; // Replace with your Google Sheet ID
+        const spreadsheetId = 'https://docs.google.com/spreadsheets/d/1RzRXblqIk4H7wBwfr5IbdGPlELG223NrpTzca1Hd6Nc/edit?gid=19078813#gid=19078813'; // Replace with your Google Sheet ID
 
         // Fetch all sheets to get pricing data
         const sheetResponse = await sheets.spreadsheets.get({
