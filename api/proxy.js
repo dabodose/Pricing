@@ -14,13 +14,26 @@ export default async (req, res) => {
         });
 
         const sheets = google.sheets({ version: 'v4', auth });
-        const spreadsheetId = 'https://docs.google.com/spreadsheets/d/1RzRXblqIk4H7wBwfr5IbdGPlELG223NrpTzca1Hd6Nc/edit?gid=19078813#gid=19078813'; // Replace with your Google Sheet ID
+        const spreadsheetId = 'https://docs.google.com/spreadsheets/d/1RzRXblqIk4H7wBwfr5IbdGPlELG223NrpTzca1Hd6Nc/edit?gid=1873736584#gid=1873736584'; // Replace with your Google Sheet ID
 
-        // Fetch all sheets to get pricing data
+        // Fetch prompt template
+        const promptResponse = await sheets.spreadsheets.values.get({
+            spreadsheetId: spreadsheetId,
+            range: 'PromptTemplate!A2:B10'
+        });
+        const promptRows = promptResponse.data.values || [];
+        let promptTemplate = '';
+        for (const row of promptRows) {
+            if (row[1]) promptTemplate += `${row[1]}\n`;
+        }
+
+        // Fetch all pricing data sheets
         const sheetResponse = await sheets.spreadsheets.get({
             spreadsheetId: spreadsheetId
         });
-        const sheetNames = sheetResponse.data.sheets.map(sheet => sheet.properties.title);
+        const sheetNames = sheetResponse.data.sheets
+            .map(sheet => sheet.properties.title)
+            .filter(name => name !== 'PromptTemplate');
 
         let pricingData = '';
         for (const sheetName of sheetNames) {
@@ -49,7 +62,7 @@ export default async (req, res) => {
                 model: 'grok-beta',
                 messages: [{
                     role: 'user',
-                    content: `You are a pricing bot named "Easy Total" for Enagic product sales. Tone: Friendly, professional, concise. Use short, clear sentences. Prompt for inputs directly if needed. Avoid extra pleasantries. Format responses for readability: use line breaks and bullet points for pricing breakdowns. Here is the pricing data:\n\n${pricingData}\nUser input: "${prompt}"`
+                    content: `${promptTemplate}\nHere is the pricing data:\n\n${pricingData}\nUser input: "${prompt}"`
                 }],
                 max_tokens: 300
             })
