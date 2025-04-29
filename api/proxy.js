@@ -1,55 +1,59 @@
-import { google } from 'googleapis';
-
 export default async (req, res) => {
     const { prompt } = req.body;
 
     try {
-        // Authenticate with Google Sheets API
-        const auth = new google.auth.GoogleAuth({
-            credentials: {
-                client_email: process.env.GOOGLE_CLIENT_EMAIL,
-                private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
-            },
-            scopes: ['https://www.googleapis.com/auth/spreadsheets']
-        });
+        // Fetch pricing data from pricing-data.json
+        const pricingDataResponse = await fetch('https://your-pricing-chat-assistant.vercel.app/pricing-data.json');
+        if (!pricingDataResponse.ok) throw new Error('Failed to fetch pricing data');
+        const pricingData = await pricingDataResponse.json();
 
-        const sheets = google.sheets({ version: 'v4', auth });
-        const spreadsheetId = 'https://docs.google.com/spreadsheets/d/1RzRXblqIk4H7wBwfr5IbdGPlELG223NrpTzca1Hd6Nc/edit?gid=1873736584#gid=1873736584'; // Replace with your Google Sheet ID
+        // Construct the prompt using the fetched data
+        let fullPrompt = `${pricingData.promptTemplate.intro}\n${pricingData.promptTemplate.tone}\n${pricingData.promptTemplate.rules}\nHere is the pricing data:\n\n`;
 
-        // Fetch prompt template
-        const promptResponse = await sheets.spreadsheets.values.get({
-            spreadsheetId: spreadsheetId,
-            range: 'PromptTemplate!A2:B10'
-        });
-        const promptRows = promptResponse.data.values || [];
-        let promptTemplate = '';
-        for (const row of promptRows) {
-            if (row[1]) promptTemplate += `${row[1]}\n`;
-        }
+        for (const country in pricingData.pricingData) {
+            const countryData = pricingData.pricingData[country];
+            fullPrompt += `${country}:\n`;
 
-        // Fetch all pricing data sheets
-        const sheetResponse = await sheets.spreadsheets.get({
-            spreadsheetId: spreadsheetId
-        });
-        const sheetNames = sheetResponse.data.sheets
-            .map(sheet => sheet.properties.title)
-            .filter(name => name !== 'PromptTemplate');
-
-        let pricingData = '';
-        for (const sheetName of sheetNames) {
-            const response = await sheets.spreadsheets.values.get({
-                spreadsheetId: spreadsheetId,
-                range: `${sheetName}!A1:Z1000`
+            // Base Prices
+            fullPrompt += "Base Prices:\n";
+            countryData.basePrices.forEach(item => {
+                fullPrompt += `- ${item.product}: ${item.price} ${item.currency}${item.convertedToCAD ? ` (converted to CAD: $${item.convertedToCAD})` : ''}\n`;
             });
-            const rows = response.data.values;
-            if (!rows || rows.length === 0) continue;
 
-            pricingData += `${sheetName}:\n`;
-            for (const row of rows) {
-                pricingData += `- ${row.join(' | ')}\n`;
+            // Packages
+            if (countryData.packages) {
+                fullPrompt += "\nPackages:\n";
+                countryData.packages.forEach(pkg => {
+                    fullPrompt += `- ${pkg.name}: ${pkg.products.join(', ')}\n`;
+                });
             }
-            pricingData += '\n';
+
+            // Tax Rates
+            if (countryData.taxRates) {
+                fullPrompt += "\nTax Rates:\n";
+                countryData.taxRates.forEach(tax => {
+                    fullPrompt += `- ${tax.region}: ${(tax.rate * 100).toFixed(2)}%\n`;
+                });
+            }
+
+            // Shipping
+            if (countryData.shipping) {
+                fullPrompt += "\nShipping:\n";
+                countryData.shipping.forEach(ship => {
+                    fullPrompt += `- ${ship.region} (${ship.products.join(', ')}): $${ship.cost.toFixed(2)}\n`;
+                });
+            }
+
+            // International Imports
+            if (countryData.internationalImports) {
+                fullPrompt += "\nInternational Imports (No tax or shipping, just convert to CAD):\n";
+                fullPrompt += `- ${countryData.internationalImports.join(', ')}\n`;
+            }
+
+            fullPrompt += '\n';
         }
+
+        fullPrompt += `User input: "${prompt}"`;
 
         // Make the xAI API request
         const response = await fetch('https://api.x.ai/v1/chat/completions', {
@@ -60,16 +64,14 @@ export default async (req, res) => {
             },
             body: JSON.stringify({
                 model: 'grok-beta',
-                messages: [{
-                    role: 'user',
-                    content: `${promptTemplate}\nHere is the pricing data:\n\n${pricingData}\nUser input: "${prompt}"`
-                }],
+                messages: [{ role: 'user', content: fullPrompt }],
                 max_tokens: 300
             })
         });
 
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
+        if (!data.choices || !data.choices[0]) throw new Error('No choices in response');
         res.status(200).json({ reply: data.choices[0]?.message?.content || 'No reply', status: 'success' });
     } catch (error) {
         console.error('Error:', error.message);
