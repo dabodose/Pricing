@@ -1,5 +1,86 @@
 {
-  "dependencies": {
-    "googleapis": "^137.1.0"
-  }
+    "promptTemplate": {
+        "intro": "You are a pricing bot named \"Easy Total\" for Enagic product sales.",
+        "tone": "Tone: Friendly, professional, concise. Use short, clear sentences.",
+        "rules": "Prompt for inputs directly if needed. Avoid extra pleasantries. Do not mention exchange rate calculations, just provide final CAD values. Format responses for readability: use line breaks and bullet points for pricing breakdowns."
+    },
+    "pricingData": {
+        "Canada": {
+            "basePrices": [
+                {"product": "K8", "price": 5700, "currency": "CAD"},
+                {"product": "Anespa", "price": 3600, "currency": "CAD"},
+                {"product": "Ukon DD", "price": 1050, "currency": "CAD"},
+                {"product": "Ukon Sigma", "price": 2900, "currency": "CAD"},
+                {"product": "EmGuarde", "price": 7400, "currency": "MYR", "convertedToCAD": 2368},
+                {"product": "Kangen Air", "price": 2140, "currency": "SGD", "convertedToCAD": 2182.80}
+            ],
+            "packages": [
+                {"name": "Quad", "products": ["K8", "Anespa", "Ukon DD", "EmGuarde"]},
+                {"name": "Quad Sig", "products": ["K8", "Anespa", "Ukon Sigma", "EmGuarde"]},
+                {"name": "Full House", "products": ["K8", "Anespa", "Ukon DD", "EmGuarde", "Kangen Air"]},
+                {"name": "Full House Sig", "products": ["K8", "Anespa", "Ukon Sigma", "EmGuarde", "Kangen Air"]}
+            ],
+            "taxRates": [
+                {"region": "Ontario", "rate": 0.13},
+                {"region": "British Columbia", "rate": 0.12},
+                {"region": "Manitoba", "rate": 0.12},
+                {"region": "Saskatchewan", "rate": 0.11},
+                {"region": "Quebec", "rate": 0.14975},
+                {"region": "New Brunswick", "rate": 0.15},
+                {"region": "Nova Scotia", "rate": 0.15},
+                {"region": "Newfoundland and Labrador", "rate": 0.15},
+                {"region": "Prince Edward Island", "rate": 0.15},
+                {"region": "Alberta", "rate": 0.05},
+                {"region": "Yukon", "rate": 0.05},
+                {"region": "Nunavut", "rate": 0.05},
+                {"region": "Northwest Territories", "rate": 0.05}
+            ],
+            "shipping": [
+                {"region": "Ontario", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 45.20},
+                {"region": "Ontario", "products": ["Ukon DD"], "cost": 22.60},
+                {"region": "British Columbia", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 44.80},
+                {"region": "British Columbia", "products": ["Ukon DD"], "cost": 22.40},
+                {"region": "Manitoba", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 44.80},
+                {"region": "Manitoba", "products": ["Ukon DD"], "cost": 22.40},
+                {"region": "Saskatchewan", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 44.40},
+                {"region": "Saskatchewan", "products": ["Ukon DD"], "cost": 22.20},
+                {"region": "Quebec", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 45.99},
+                {"region": "Quebec", "products": ["Ukon DD"], "cost": 22.99},
+                {"region": "New Brunswick", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 46.00},
+                {"region": "New Brunswick", "products": ["Ukon DD"], "cost": 23.00},
+                {"region": "Nova Scotia", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 46.00},
+                {"region": "Nova Scotia", "products": ["Ukon DD"], "cost": 23.00},
+                {"region": "Newfoundland and Labrador", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 46.00},
+                {"region": "Newfoundland and Labrador", "products": ["Ukon DD"], "cost": 23.00},
+                {"region": "Prince Edward Island", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 46.00},
+                {"region": "Prince Edward Island", "products": ["Ukon DD"], "cost": 23.00},
+                {"region": "Alberta", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 42.00},
+                {"region": "Alberta", "products": ["Ukon DD"], "cost": 21.00},
+                {"region": "Yukon", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 42.00},
+                {"region": "Yukon", "products": ["Ukon DD"], "cost": 21.00},
+                {"region": "Nunavut", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 42.00},
+                {"region": "Nunavut", "products": ["Ukon DD"], "cost": 21.00},
+                {"region": "Northwest Territories", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 42.00},
+                {"region": "Northwest Territories", "products": ["Ukon DD"], "cost": 21.00}
+            ],
+            "internationalImports": ["EmGuarde", "Kangen Air"]
+        },
+        "UK": {
+            "basePrices": [
+                {"product": "K8", "price": 3528, "currency": "GBP"},
+                {"product": "Anespa", "price": 2184, "currency": "GBP"},
+                {"product": "Ukon DD", "price": 630, "currency": "GBP"},
+                {"product": "emGuarde", "price": 1134, "currency": "GBP"}
+            ],
+            "taxRates": [
+                {"region": "N/A", "rate": 0.20}
+            ],
+            "shipping": [
+                {"region": "N/A", "products": ["K8"], "cost": 47.88},
+                {"region": "N/A", "products": ["Anespa"], "cost": 39.48},
+                {"region": "N/A", "products": ["Ukon DD"], "cost": 25.20},
+                {"region": "N/A", "products": ["emGuarde"], "cost": 25.20}
+            ]
+        }
+    }
 }
