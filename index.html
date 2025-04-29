@@ -148,13 +148,13 @@
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
             try {
-                const response = await fetch('https://hooks.zapier.com/hooks/catch/17595117/2p5ivjl/', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ prompt: message })
-});
+                const response = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prompt: message })
+                });
 
                 const data = await response.json();
                 const reply = data.reply;
