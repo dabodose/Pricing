@@ -3,7 +3,7 @@ export default async (req, res) => {
 
     try {
         // Fetch pricing data from pricing-data.json
-        const pricingDataResponse = await fetch('https://your-pricing-chat-assistant.vercel.app/pricing-data.json');
+        const pricingDataResponse = await fetch('https://pricing-chat-assistant.vercel.app/');
         if (!pricingDataResponse.ok) throw new Error('Failed to fetch pricing data');
         const pricingData = await pricingDataResponse.json();
 
