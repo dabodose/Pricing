@@ -1,5 +1,5 @@
 export default async (req, res) => {
-    const { prompt } = req.body;
+    const { prompt, history } = req.body;
 
     try {
         // Fetch pricing data from pricing-data.json
@@ -53,7 +53,14 @@ export default async (req, res) => {
             fullPrompt += '\n';
         }
 
-        fullPrompt += `User input: "${prompt}"`;
+        // Include conversation history
+        let conversationPrompt = "Conversation history:\n";
+        history.forEach((msg, index) => {
+            conversationPrompt += `${index + 1}. ${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n`;
+        });
+        conversationPrompt += `\nCurrent user input: "${prompt}"`;
+
+        fullPrompt += conversationPrompt;
 
         // Make the xAI API request
         const response = await fetch('https://api.x.ai/v1/chat/completions', {
