@@ -1,364 +1,104 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Easy Total</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #1a1a1a;
-            color: #e0e0e0;
-            padding: 0;
-            margin: 0;
-            height: 100vh;
-            overflow: hidden; /* Prevent outer scrolling */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .container {
-            max-width: 500px;
-            width: 100%;
-            height: 833px; /* 3:5 aspect ratio (500:833) */
-            background-color: #252525;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-            overflow: hidden;
-            border: 1px solid #e0e0e0;
-            position: fixed; /* Fix the container position */
-            display: flex;
-            flex-direction: column;
-        }
-        h2 {
-            margin: 0;
-            padding: 15px;
-            background-color: #2f2f2f;
-            font-size: 1.2em;
-            font-weight: 500;
-            text-align: center;
-        }
-        #chat-container {
-            padding: 10px;
-            height: calc(100% - 57px); /* Adjusted: 30px input height + 10px padding-top + 10px padding-bottom + 5px margin-bottom + 2px border */
-            overflow-y: auto;
-            background-color: #252525;
-            font-size: 0.9em;
-            box-sizing: border-box;
-            flex: 1;
-        }
-        #chat-container::-webkit-scrollbar {
-            width: 6px;
-        }
-        #chat-container::-webkit-scrollbar-track {
-            background: #333;
-        }
-        #chat-container::-webkit-scrollbar-thumb {
-            background: #555;
-            border-radius: 3px;
-        }
-        .message {
-            margin: 15px 0; /* Increased vertical margin for more space between messages */
-            display: block; /* Ensure messages stack vertically */
-            line-height: 1.4;
-        }
-        .message-content {
-            padding: 6px 10px;
-            border-radius: 5px;
-            display: inline-block; /* Allow dynamic sizing */
-            max-width: 70%; /* Restore dynamic sizing */
-        }
-        .user-message {
-            text-align: right; /* Align content to the right */
-        }
-        .user-message .message-content {
-            background-color: #007bff;
-            text-align: left; /* Text aligned left inside the box */
-            display: inline-block;
-        }
-        .assistant-message .message-content {
-            background-color: #333;
-        }
-        /* Custom Styling for Assistant Responses */
-        .response-title {
-            font-size: 1.1em;
-            font-weight: 500;
-            margin: 15px 0 10px 0;
-            color: #ffffff;
-        }
-        .response-section {
-            margin: 10px 0;
-        }
-        .response-section-title {
-            font-size: 0.95em;
-            font-weight: 500;
-            margin: 10px 0 5px 0;
-            color: #e0e0e0;
-        }
-        .response-item {
-            display: flex;
-            align-items: flex-start;
-            margin: 5px 0;
-            line-height: 1.5;
-        }
-        .response-item-bullet {
-            margin-right: 8px;
-            color: #00d4ff;
-            font-size: 1em;
-        }
-        .response-item-number {
-            margin-right: 8px;
-            color: #00d4ff;
-            font-size: 0.9em;
-            min-width: 15px;
-            text-align: right;
-        }
-        .response-item-text {
-            flex: 1;
-        }
-        .response-total {
-            font-style: italic;
-            color: #e0e0e0;
-            margin: 10px 0;
-        }
-        .response-link {
-            color: #00d4ff;
-            text-decoration: underline;
-            transition: color 0.2s ease;
-        }
-        .response-link:hover {
-            color: #00b0d4;
-        }
-        .loading {
-            margin: 15px 0; /* Match the increased margin for consistency */
-            display: flex;
-            align-items: center;
-        }
-        .loading::after {
-            content: '';
-            display: inline-block;
-            width: 30px;
-            height: 10px;
-            background: transparent;
-            animation: dots 1.5s infinite;
-        }
-        @keyframes dots {
-            0% { content: '•'; }
-            33% { content: '••'; }
-            66% { content: '•••'; }
-        }
-        .input-group {
-            display: flex;
-            gap: 10px;
-            padding: 10px;
-            background-color: #2f2f2f;
-            margin-bottom: 5px; /* Reduced margin to fit within container */
-        }
-        #user-input {
-            flex: 1;
-            padding: 6px;
-            background-color: #3a3a3a;
-            border: 1px solid #444;
-            border-radius: 5px;
-            color: #e0e0e0;
-            font-size: 0.9em;
-            font-family: 'Poppins', sans-serif;
-            resize: none;
-            height: 30px;
-            line-height: 1.2;
-            overflow-y: auto;
-            box-sizing: border-box;
-        }
-        #user-input:focus {
-            outline: none;
-            border-color: #007bff;
-        }
-        #user-input::-webkit-input-placeholder {
-            font-family: 'Poppins', sans-serif;
-            color: #999;
-        }
-        #user-input:-moz-placeholder {
-            font-family: 'Poppins', sans-serif;
-            color: #999;
-            opacity: 1;
-        }
-        #user-input::-moz-placeholder {
-            font-family: 'Poppins', sans-serif;
-            color: #999;
-            opacity: 1;
-        }
-        #user-input:-ms-input-placeholder {
-            font-family: 'Poppins', sans-serif;
-            color: #999;
-        }
-        #send-btn {
-            padding: 6px 12px;
-            background-color: #007bff;
-            color: #e0e0e0;
-            border: none;
-            border-radius: 5px;
-            font-size: 0.9em;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        #send-btn:hover {
-            background-color: #0056b3;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2>Easy Total</h2>
-        <div id="chat-container">
-            <div class="message assistant-message"><div class="message-content">Enter product/package and Region</div></div>
-        </div>
-        <div class="input-group">
-            <textarea id="user-input" placeholder="E.g., Quad in Alberta"></textarea>
-            <button id="send-btn" onclick="sendMessage()">Send</button>
-        </div>
-    </div>
+export default async (req, res) => {
+    const { prompt, history } = req.body;
 
-    <script>
-        const chatContainer = document.getElementById('chat-container');
-        const userInput = document.getElementById('user-input');
+    try {
+        // Fetch pricing data from pricing-data.json
+        const pricingDataResponse = await fetch('https://pricing-chat-assistant.vercel.app/pricing-data.json');
+        if (!pricingDataResponse.ok) throw new Error('Failed to fetch pricing data');
+        const pricingData = await pricingDataResponse.json();
 
-        // Store conversation history
-        let conversationHistory = [
-            { role: 'assistant', content: 'Enter product/package and Region' }
-        ];
+        // Construct the prompt using the fetched data
+        let fullPrompt = `${pricingData.promptTemplate.intro}\n${pricingData.promptTemplate.tone}\n${pricingData.promptTemplate.rules}\nHere is the pricing data:\n\n`;
 
-        function renderResponse(reply) {
-            console.log('Raw reply:', reply); // Debug: Log the raw reply
-            const lines = reply.split('\n');
-            let html = '';
-            let currentSection = null;
-            let inItems = false;
-            let financingPrompt = '';
+        for (const country in pricingData.pricingData) {
+            const countryData = pricingData.pricingData[country];
+            fullPrompt += `${country}:\n`;
 
-            // Process the reply to collect the financing prompt only once
-            const processedLines = [];
-            let financingPromptFound = false;
-            for (const line of lines) {
-                const trimmedLine = line.trim();
-                if (trimmedLine.startsWith('::FinancingPrompt:')) {
-                    if (!financingPromptFound) {
-                        financingPrompt = trimmedLine.replace('::FinancingPrompt:', '').trim();
-                        financingPromptFound = true;
-                    }
-                    continue; // Skip adding the financing prompt line to processedLines
-                }
-                processedLines.push(trimmedLine);
-            }
-
-            // Render the processed lines
-            processedLines.forEach(line => {
-                if (!line) return;
-
-                if (line.startsWith('::Title:')) {
-                    const title = line.replace('::Title:', '').trim();
-                    html += `<div class="response-title">${title}</div>`;
-                } else if (line.startsWith('::Section:')) {
-                    currentSection = line.replace('::Section:', '').trim();
-                    inItems = false;
-                    html += `<div class="response-section"><div class="response-section-title">${currentSection}</div></div>`;
-                } else if (line.startsWith('::Items')) {
-                    inItems = true;
-                } else if (line.startsWith('::Total:')) {
-                    const total = line.replace('::Total:', '').trim();
-                    html += `<div class="response-total">Total: ${total}</div>`;
-                    inItems = false;
-                } else if (line.includes('|')) {
-                    const [label, ...rest] = line.split('|');
-                    const text = rest.join('|').trim();
-                    const numberMatch = label.match(/^\d+\s*$/);
-                    if (numberMatch) {
-                        const number = numberMatch[0].trim();
-                        html += `<div class="response-item"><span class="response-item-number">${number}.</span><span class="response-item-text">${text}</span></div>`;
-                    } else if (text.startsWith('Link:')) {
-                        const link = text.replace('Link:', '').trim();
-                        html += `<div class="response-item"><span class="response-item-text">${label} <a href="${link}" class="response-link" target="_blank">Click here</a></span></div>`;
-                    } else if (inItems) {
-                        html += `<div class="response-item"><span class="response-item-bullet">•</span><span class="response-item-text">${label}: ${text}</span></div>`;
-                    } else {
-                        html += `<div class="response-item"><span class="response-item-bullet">•</span><span class="response-item-text">${label}: ${text}</span></div>`;
-                    }
-                } else {
-                    html += `<div class="response-item"><span class="response-item-text">${line}</span></div>`;
-                }
+            // Base Prices
+            fullPrompt += "Base Prices:\n";
+            countryData.basePrices.forEach(item => {
+                fullPrompt += `- ${item.product}: ${item.price} ${item.currency}${item.convertedToCAD ? ` (converted to CAD: $${item.convertedToCAD})` : ''}\n`;
             });
 
-            // Append the financing prompt only once
-            if (financingPrompt) {
-                html += `<div class="response-item"><span class="response-item-text">${financingPrompt}</span></div>`;
-            }
-
-            console.log('Rendered HTML:', html); // Debug: Log the rendered HTML
-            return html;
-        }
-
-        async function sendMessage() {
-            const message = userInput.value.trim();
-            if (!message) return;
-
-            // Display user message
-            chatContainer.innerHTML += `<div class="message user-message"><div class="message-content">${message}</div></div>`;
-            userInput.value = '';
-
-            // Add user message to conversation history
-            conversationHistory.push({ role: 'user', content: message });
-
-            // Show loading dots
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'loading';
-            chatContainer.appendChild(loadingDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-
-            try {
-                const response = await fetch('/api/proxy', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                        prompt: message,
-                        history: conversationHistory.slice(-5) // Limit to last 5 exchanges
-                    })
+            // Packages
+            if (countryData.packages) {
+                fullPrompt += "\nPackages:\n";
+                countryData.packages.forEach(pkg => {
+                    fullPrompt += `- ${pkg.name}: ${pkg.products.join(', ')}\n`;
                 });
-
-                const data = await response.json();
-                const reply = data.reply;
-
-                // Add assistant response to conversation history
-                conversationHistory.push({ role: 'assistant', content: reply });
-
-                // Remove loading dots and display assistant response
-                loadingDiv.remove();
-                const renderedReply = renderResponse(reply);
-                chatContainer.innerHTML += `<div class="message assistant-message"><div class="message-content">${renderedReply}</div></div>`;
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            } catch (error) {
-                conversationHistory.push({ role: 'assistant', content: 'Failed to get response. Check network.' });
-                loadingDiv.remove();
-                chatContainer.innerHTML += `<div class="message assistant-message"><div class="message-content">Failed to get response. Check network.</div></div>`;
-                chatContainer.scrollTop = chatContainer.scrollHeight;
             }
+
+            // Tax Rates
+            if (countryData.taxRates) {
+                fullPrompt += "\nTax Rates:\n";
+                countryData.taxRates.forEach(tax => {
+                    fullPrompt += `- ${tax.region}: ${(tax.rate * 100).toFixed(2)}%\n`;
+                });
+            }
+
+            // Shipping
+            if (countryData.shipping) {
+                fullPrompt += "\nShipping:\n";
+                countryData.shipping.forEach(ship => {
+                    fullPrompt += `- ${ship.region} (${ship.products.join(', ')}): $${ship.cost.toFixed(2)}\n`;
+                });
+            }
+
+            // International Imports
+            if (countryData.internationalImports) {
+                fullPrompt += "\nInternational Imports (No tax or shipping, just convert to CAD):\n";
+                fullPrompt += `- ${countryData.internationalImports.join(', ')}\n`;
+            }
+
+            fullPrompt += '\n';
         }
 
-        // Handle Enter and Shift + Enter
-        userInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                if (e.shiftKey) {
-                    // Shift + Enter: Add a new line
-                    e.preventDefault();
-                    userInput.value += '\n';
-                } else {
-                    // Enter alone: Submit the prompt
-                    e.preventDefault();
-                    sendMessage();
-                }
-            }
+        // Include conversation history
+        let conversationPrompt = "Conversation history:\n";
+        history.forEach((msg, index) => {
+            conversationPrompt += `${index + 1}. ${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n`;
         });
-    </script>
-</body>
-</html>
+        conversationPrompt += `\nCurrent user input: "${prompt}"`;
+
+        fullPrompt += conversationPrompt;
+
+        // Make the xAI API request
+        const response = await fetch('https://api.x.ai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.XAI_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: 'grok-beta',
+                messages: [{ role: 'user', content: fullPrompt }],
+                max_tokens: 300
+            })
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        if (!data.choices || !data.choices[0]) throw new Error('No choices in response');
+
+        let reply = data.choices[0]?.message?.content || 'No reply';
+        const financingPromptText = 'Are you ready to find out how you can get this financed for $0 down?';
+
+        // Normalize the reply to avoid duplicate prompts due to formatting
+        const normalizedReply = reply.trim();
+
+        // Check if the reply contains a total price (indicating a pricing response)
+        // Ensure we only append the financing prompt once and only for pricing responses
+        if (
+            normalizedReply.includes('::Total:') && 
+            !normalizedReply.includes(financingPromptText) && 
+            !history.some(msg => msg.content.trim().includes(financingPromptText))
+        ) {
+            reply = normalizedReply + `\n\n::FinancingPrompt:${financingPromptText}`;
+        }
+
+        res.status(200).json({ reply: reply, status: 'success' });
+    } catch (error) {
+        console.error('Error:', error.message);
+        res.status(500).json({ reply: `Failed: ${error.message}`, status: 'error' });
+    }
+};
