@@ -81,11 +81,16 @@ export default async (req, res) => {
         if (!data.choices || !data.choices[0]) throw new Error('No choices in response');
 
         let reply = data.choices[0]?.message?.content || 'No reply';
+        const financingPromptText = 'Are you ready to find out how you can get this financed for $0 down?';
 
         // Check if the reply contains a total price (indicating a pricing response)
         // Ensure we only append the financing prompt once and only for pricing responses
-        if (reply.includes('::Total:') && !reply.includes('::FinancingPrompt:') && !history.some(msg => msg.content.includes('Are you ready to find out how you can get this financed for $0 down?'))) {
-            reply = reply.trim() + '\n\n::FinancingPrompt:Are you ready to find out how you can get this financed for $0 down?';
+        if (
+            reply.includes('::Total:') && 
+            !reply.includes(`::FinancingPrompt:${financingPromptText}`) && 
+            !history.some(msg => msg.content.includes(financingPromptText))
+        ) {
+            reply = reply.trim() + `\n\n::FinancingPrompt:${financingPromptText}`;
         }
 
         res.status(200).json({ reply: reply, status: 'success' });
