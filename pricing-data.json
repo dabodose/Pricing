@@ -1,348 +1,86 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Easy Total</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #1a1a1a;
-            color: #e0e0e0;
-            padding: 0;
-            margin: 0;
-            height: 100vh;
-            overflow: hidden; /* Prevent outer scrolling */
-            display: flex;
-            justify-content: center;
-            align-items: center;
+{
+    "promptTemplate": {
+        "intro": "You are a pricing bot named \"Easy Total\" for Enagic product sales.",
+        "tone": "Tone: Friendly, professional, concise. Use short, clear sentences.",
+        "rules": "Prompt for inputs directly if needed. Avoid extra pleasantries. Format responses using plain text with delimiters for structure (do not use Markdown). Use '::' to separate sections and '|' for list items. Structure responses like this example:\n\n::Title:Product in Region\n::Items\nProduct 1 | $X (breakdown)\nProduct 2 | $Y (breakdown)\n::Total:$Z CAD\n\nFollow these steps to calculate pricing:\n1. Identify the products: Check if the request is for a single product or a package. If a package, list its products.\n2. Check for international imports: Products listed under 'International Imports' (e.g., EmGuarde, Kangen Air) have no tax or shipping; use their converted CAD price only.\n3. Calculate base price: For each product, use the base price in CAD. For international imports, use the convertedToCAD value.\n4. Apply tax (if applicable): Apply the region's tax rate to products NOT in 'International Imports'. Tax applies to K8, Anespa, Ukon DD, Ukon Sigma only.\n5. Apply shipping (if applicable): Apply the region's shipping cost to products NOT in 'International Imports'. Use the shipping rate specific to each product (e.g., K8/Anespa/Ukon Sigma vs. Ukon DD).\n6. Sum the costs: Add up the total for all products, including base price, tax (if applicable), and shipping (if applicable). Display the breakdown and total in CAD.\n\n**Conversation Handling Rules**:\n- Use the conversation history to recall previous messages and maintain context.\n- If the user provides a region (e.g., 'Alberta'), remember it for follow-up questions unless a new region is specified.\n- If the user asks about a package or product (e.g., 'Quad' or 'Full House'), assume they are referring to the same region as the last request unless stated otherwise.\n- If the user asks for a new product or package without specifying a region, use the last mentioned region. If no region has been mentioned, prompt for the region.\n- If the request is unclear, infer the most likely intent based on the conversation history (e.g., 'how much would a full house be' after 'Quad in Alberta' means 'Full House in Alberta').\n- Avoid asking for information already provided in the conversation history.\n\n**Financing Information (Medicard, Canada)**:\nAfter providing a pricing total, you will ask: 'Are you ready to find out how you can get this financed for $0 down?'\n- If the user says 'yes' or similar (e.g., 'sure', 'okay', 'yep'), provide the following financing information:\n\n::Title:Financing with Medicard (Canada)\n::Section:Eligibility\nCredit Score | 525+\nEarnings | $1,500/month ($21K/year)\nSelf-Employed | $2,000/month, 2+ years preferred, upload Notice of Assessment (last tax year: July-June if incorporated, Jan-Dec if sole trader)\n::Section:Application Tips\nIncome Verification | Medicard uses Flink to connect your bank. Don't connect bank say that you are uncomfortable doing so, & upload paystubs (via app or email).\nExpenses | Report rent lower or $0 if living with parents. For mortgages if you have a spouse, split monthly payment cost in half.\n::Section:Financing Details\nChoose | 6-year option after applying\nPayments | $100-$400/month, $0 down (based on package and credit)\n::Section:Post-Approval\n1 | Call Medicard to confirm funds go to Enagic\n2 | Negotiate rate & remove insurance (saves $50-$100/month)\n::Section:Next Steps\nReady to apply? | Link: https://apply.medicard.com/20878/new-app/loan-amount\n- If the user says 'no' or similar (e.g., 'not now', 'no thanks'), respond with: 'Let me know if you need pricing for another product or region!'"
+    },
+    "pricingData": {
+        "Canada": {
+            "basePrices": [
+                {"product": "K8", "price": 5700, "currency": "CAD"},
+                {"product": "Anespa", "price": 3600, "currency": "CAD"},
+                {"product": "Ukon DD", "price": 1050, "currency": "CAD"},
+                {"product": "Ukon Sigma", "price": 2900, "currency": "CAD"},
+                {"product": "EmGuarde", "price": 7400, "currency": "MYR", "convertedToCAD": 2368},
+                {"product": "Kangen Air", "price": 2140, "currency": "SGD", "convertedToCAD": 2182.80}
+            ],
+            "packages": [
+                {"name": "Quad", "products": ["K8", "Anespa", "Ukon DD", "EmGuarde"]},
+                {"name": "Quad Sig", "products": ["K8", "Anespa", "Ukon Sigma", "EmGuarde"]},
+                {"name": "Full House", "products": ["K8", "Anespa", "Ukon DD", "EmGuarde", "Kangen Air"]},
+                {"name": "Full House Sig", "products": ["K8", "Anespa", "Ukon Sigma", "EmGuarde", "Kangen Air"]}
+            ],
+            "taxRates": [
+                {"region": "Ontario", "rate": 0.13},
+                {"region": "British Columbia", "rate": 0.12},
+                {"region": "Manitoba", "rate": 0.12},
+                {"region": "Saskatchewan", "rate": 0.11},
+                {"region": "Quebec", "rate": 0.14975},
+                {"region": "New Brunswick", "rate": 0.15},
+                {"region": "Nova Scotia", "rate": 0.15},
+                {"region": "Newfoundland and Labrador", "rate": 0.15},
+                {"region": "Prince Edward Island", "rate": 0.15},
+                {"region": "Alberta", "rate": 0.05},
+                {"region": "Yukon", "rate": 0.05},
+                {"region": "Nunavut", "rate": 0.05},
+                {"region": "Northwest Territories", "rate": 0.05}
+            ],
+            "shipping": [
+                {"region": "Ontario", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 45.20},
+                {"region": "Ontario", "products": ["Ukon DD"], "cost": 22.60},
+                {"region": "British Columbia", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 44.80},
+                {"region": "British Columbia", "products": ["Ukon DD"], "cost": 22.40},
+                {"region": "Manitoba", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 44.80},
+                {"region": "Manitoba", "products": ["Ukon DD"], "cost": 22.40},
+                {"region": "Saskatchewan", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 44.40},
+                {"region": "Saskatchewan", "products": ["Ukon DD"], "cost": 22.20},
+                {"region": "Quebec", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 45.99},
+                {"region": "Quebec", "products": ["Ukon DD"], "cost": 22.99},
+                {"region": "New Brunswick", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 46.00},
+                {"region": "New Brunswick", "products": ["Ukon DD"], "cost": 23.00},
+                {"region": "Nova Scotia", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 46.00},
+                {"region": "Nova Scotia", "products": ["Ukon DD"], "cost": 23.00},
+                {"region": "Newfoundland and Labrador", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 46.00},
+                {"region": "Newfoundland and Labrador", "products": ["Ukon DD"], "cost": 23.00},
+                {"region": "Prince Edward Island", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 46.00},
+                {"region": "Prince Edward Island", "products": ["Ukon DD"], "cost": 23.00},
+                {"region": "Alberta", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 42.00},
+                {"region": "Alberta", "products": ["Ukon DD"], "cost": 21.00},
+                {"region": "Yukon", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 42.00},
+                {"region": "Yukon", "products": ["Ukon DD"], "cost": 21.00},
+                {"region": "Nunavut", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 42.00},
+                {"region": "Nunavut", "products": ["Ukon DD"], "cost": 21.00},
+                {"region": "Northwest Territories", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 42.00},
+                {"region": "Northwest Territories", "products": ["Ukon DD"], "cost": 21.00}
+            ],
+            "internationalImports": ["EmGuarde", "Kangen Air"]
+        },
+        "UK": {
+            "basePrices": [
+                {"product": "K8", "price": 3528, "currency": "GBP"},
+                {"product": "Anespa", "price": 2184, "currency": "GBP"},
+                {"product": "Ukon DD", "price": 630, "currency": "GBP"},
+                {"product": "emGuarde", "price": 1134, "currency": "GBP"}
+            ],
+            "taxRates": [
+                {"region": "N/A", "rate": 0.20}
+            ],
+            "shipping": [
+                {"region": "N/A", "products": ["K8"], "cost": 47.88},
+                {"region": "N/A", "products": ["Anespa"], "cost": 39.48},
+                {"region": "N/A", "products": ["Ukon DD"], "cost": 25.20},
+                {"region": "N/A", "products": ["emGuarde"], "cost": 25.20}
+            ]
         }
-        .container {
-            max-width: 500px;
-            width: 100%;
-            height: 833px; /* 3:5 aspect ratio (500:833) */
-            background-color: #252525;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-            overflow: hidden;
-            border: 1px solid #e0e0e0;
-            position: fixed; /* Fix the container position */
-        }
-        h2 {
-            margin: 0;
-            padding: 15px;
-            background-color: #2f2f2f;
-            font-size: 1.2em;
-            font-weight: 500;
-            text-align: center;
-        }
-        #chat-container {
-            padding: 10px;
-            height: calc(100% - 80px); /* Adjusted to account for smaller input group and container border */
-            overflow-y: auto;
-            background-color: #252525;
-            font-size: 0.9em;
-            box-sizing: border-box;
-        }
-        #chat-container::-webkit-scrollbar {
-            width: 6px;
-        }
-        #chat-container::-webkit-scrollbar-track {
-            background: #333;
-        }
-        #chat-container::-webkit-scrollbar-thumb {
-            background: #555;
-            border-radius: 3px;
-        }
-        .message {
-            margin: 15px 0; /* Increased vertical margin for more space between messages */
-            display: block; /* Ensure messages stack vertically */
-            line-height: 1.4;
-        }
-        .message-content {
-            padding: 6px 10px;
-            border-radius: 5px;
-            display: inline-block; /* Allow dynamic sizing */
-            max-width: 70%; /* Restore dynamic sizing */
-        }
-        .user-message {
-            text-align: right; /* Align content to the right */
-        }
-        .user-message .message-content {
-            background-color: #007bff;
-            text-align: left; /* Text aligned left inside the box */
-            display: inline-block;
-        }
-        .assistant-message .message-content {
-            background-color: #333;
-        }
-        /* Custom Styling for Assistant Responses */
-        .response-title {
-            font-size: 1.1em;
-            font-weight: 500;
-            margin: 15px 0 10px 0;
-            color: #ffffff;
-        }
-        .response-section {
-            margin: 10px 0;
-        }
-        .response-section-title {
-            font-size: 0.95em;
-            font-weight: 500;
-            margin: 10px 0 5px 0;
-            color: #e0e0e0;
-        }
-        .response-item {
-            display: flex;
-            align-items: flex-start;
-            margin: 5px 0;
-            line-height: 1.5;
-        }
-        .response-item-bullet {
-            margin-right: 8px;
-            color: #00d4ff;
-            font-size: 1em;
-        }
-        .response-item-number {
-            margin-right: 8px;
-            color: #00d4ff;
-            font-size: 0.9em;
-            min-width: 15px;
-            text-align: right;
-        }
-        .response-item-text {
-            flex: 1;
-        }
-        .response-total {
-            font-style: italic;
-            color: #e0e0e0;
-            margin: 10px 0;
-        }
-        .response-link {
-            color: #00d4ff;
-            text-decoration: underline;
-            transition: color 0.2s ease;
-        }
-        .response-link:hover {
-            color: #00b0d4;
-        }
-        .loading {
-            margin: 15px 0; /* Match the increased margin for consistency */
-            display: flex;
-            align-items: center;
-        }
-        .loading::after {
-            content: '';
-            display: inline-block;
-            width: 30px;
-            height: 10px;
-            background: transparent;
-            animation: dots 1.5s infinite;
-        }
-        @keyframes dots {
-            0% { content: '•'; }
-            33% { content: '••'; }
-            66% { content: '•••'; }
-        }
-        .input-group {
-            display: flex;
-            gap: 10px;
-            padding: 10px;
-            background-color: #2f2f2f;
-            margin-bottom: 5px; /* Reduced margin to bring it up */
-        }
-        #user-input {
-            flex: 1;
-            padding: 6px; /* Reduced padding for smaller height */
-            background-color: #3a3a3a;
-            border: 1px solid #444;
-            border-radius: 5px;
-            color: #e0e0e0;
-            font-size: 0.9em;
-            font-family: 'Poppins', sans-serif; /* Explicitly set font */
-            resize: none; /* Prevent resizing */
-            height: 30px; /* Keep height */
-            line-height: 1.2; /* Match the line height for consistency */
-            overflow-y: auto; /* Allow scrolling if needed */
-            box-sizing: border-box;
-        }
-        #user-input:focus {
-            outline: none;
-            border-color: #007bff;
-        }
-        #user-input::-webkit-input-placeholder {
-            font-family: 'Poppins', sans-serif; /* Ensure placeholder uses Poppins */
-            color: #999;
-        }
-        #user-input:-moz-placeholder {
-            font-family: 'Poppins', sans-serif; /* For Firefox */
-            color: #999;
-            opacity: 1;
-        }
-        #user-input::-moz-placeholder {
-            font-family: 'Poppins', sans-serif; /* For Firefox */
-            color: #999;
-            opacity: 1;
-        }
-        #user-input:-ms-input-placeholder {
-            font-family: 'Poppins', sans-serif; /* For Edge */
-            color: #999;
-        }
-        #send-btn {
-            padding: 6px 12px; /* Reduced padding for smaller height */
-            background-color: #007bff;
-            color: #e0e0e0;
-            border: none;
-            border-radius: 5px;
-            font-size: 0.9em;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        #send-btn:hover {
-            background-color: #0056b3;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2>Easy Total</h2>
-        <div id="chat-container">
-            <div class="message assistant-message"><div class="message-content">Enter product/package and Region</div></div>
-        </div>
-        <div class="input-group">
-            <textarea id="user-input" placeholder="E.g., Quad in Alberta"></textarea>
-            <button id="send-btn" onclick="sendMessage()">Send</button>
-        </div>
-    </div>
-
-    <script>
-        const chatContainer = document.getElementById('chat-container');
-        const userInput = document.getElementById('user-input');
-
-        // Store conversation history
-        let conversationHistory = [
-            { role: 'assistant', content: 'Enter product/package and Region' }
-        ];
-
-        function renderResponse(reply) {
-            const lines = reply.split('\n');
-            let html = '';
-            let currentSection = null;
-            let inItems = false;
-            let financingPrompt = '';
-
-            lines.forEach(line => {
-                line = line.trim();
-                if (!line) return;
-
-                if (line.startsWith('::FinancingPrompt:')) {
-                    financingPrompt = line.replace('::FinancingPrompt:', '').trim();
-                    return;
-                }
-
-                if (line.startsWith('::Title:')) {
-                    const title = line.replace('::Title:', '').trim();
-                    html += `<div class="response-title">${title}</div>`;
-                } else if (line.startsWith('::Section:')) {
-                    currentSection = line.replace('::Section:', '').trim();
-                    inItems = false;
-                    html += `<div class="response-section"><div class="response-section-title">${currentSection}</div></div>`;
-                } else if (line.startsWith('::Items')) {
-                    inItems = true;
-                } else if (line.startsWith('::Total:')) {
-                    const total = line.replace('::Total:', '').trim();
-                    html += `<div class="response-total">Total: ${total}</div>`;
-                    inItems = false;
-                } else if (line.includes('|')) {
-                    const [label, ...rest] = line.split('|');
-                    const text = rest.join('|').trim();
-                    const numberMatch = label.match(/^\d+\s*$/);
-                    if (numberMatch) {
-                        const number = numberMatch[0].trim();
-                        html += `<div class="response-item"><span class="response-item-number">${number}.</span><span class="response-item-text">${text}</span></div>`;
-                    } else if (text.startsWith('Link:')) {
-                        const link = text.replace('Link:', '').trim();
-                        html += `<div class="response-item"><span class="response-item-text">${label} <a href="${link}" class="response-link" target="_blank">Click here</a></span></div>`;
-                    } else if (inItems) {
-                        html += `<div class="response-item"><span class="response-item-bullet">•</span><span class="response-item-text">${label}: ${text}</span></div>`;
-                    } else {
-                        html += `<div class="response-item"><span class="response-item-bullet">•</span><span class="response-item-text">${label}: ${text}</span></div>`;
-                    }
-                } else {
-                    html += `<div class="response-item"><span class="response-item-text">${line}</span></div>`;
-                }
-            });
-
-            if (financingPrompt) {
-                html += `<div class="response-item"><span class="response-item-text">${financingPrompt}</span></div>`;
-            }
-
-            return html;
-        }
-
-        async function sendMessage() {
-            const message = userInput.value.trim();
-            if (!message) return;
-
-            // Display user message
-            chatContainer.innerHTML += `<div class="message user-message"><div class="message-content">${message}</div></div>`;
-            userInput.value = '';
-
-            // Add user message to conversation history
-            conversationHistory.push({ role: 'user', content: message });
-
-            // Show loading dots
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'loading';
-            chatContainer.appendChild(loadingDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-
-            try {
-                const response = await fetch('/api/proxy', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                        prompt: message,
-                        history: conversationHistory.slice(-5) // Limit to last 5 exchanges
-                    })
-                });
-
-                const data = await response.json();
-                const reply = data.reply;
-
-                // Add assistant response to conversation history
-                conversationHistory.push({ role: 'assistant', content: reply });
-
-                // Remove loading dots and display assistant response
-                loadingDiv.remove();
-                const renderedReply = renderResponse(reply);
-                chatContainer.innerHTML += `<div class="message assistant-message"><div class="message-content">${renderedReply}</div></div>`;
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            } catch (error) {
-                conversationHistory.push({ role: 'assistant', content: 'Failed to get response. Check network.' });
-                loadingDiv.remove();
-                chatContainer.innerHTML += `<div class="message assistant-message"><div class="message-content">Failed to get response. Check network.</div></div>`;
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }
-        }
-
-        // Handle Enter and Shift + Enter
-        userInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                if (e.shiftKey) {
-                    // Shift + Enter: Add a new line
-                    e.preventDefault();
-                    userInput.value += '\n';
-                } else {
-                    // Enter alone: Submit the prompt
-                    e.preventDefault();
-                    sendMessage();
-                }
-            }
-        });
-    </script>
-</body>
-</html>
+    }
+}
