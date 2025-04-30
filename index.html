@@ -63,8 +63,8 @@
         .message-content {
             padding: 6px 10px;
             border-radius: 5px;
-            display: inline-block; /* Adaptive sizing for content */
-            max-width: 70%;
+            display: block; /* Full width for custom rendering */
+            max-width: 100%;
         }
         .user-message {
             text-align: right; /* Align content to the right */
@@ -72,10 +72,60 @@
         .user-message .message-content {
             background-color: #007bff;
             text-align: left; /* Text aligned left inside the box */
+            display: inline-block;
         }
         .assistant-message .message-content {
             background-color: #333;
-            white-space: pre-wrap;
+        }
+        /* Custom Styling for Assistant Responses */
+        .response-title {
+            font-size: 1.1em;
+            font-weight: 500;
+            margin: 15px 0 10px 0;
+            color: #ffffff;
+        }
+        .response-section {
+            margin: 10px 0;
+        }
+        .response-section-title {
+            font-size: 0.95em;
+            font-weight: 500;
+            margin: 10px 0 5px 0;
+            color: #e0e0e0;
+        }
+        .response-item {
+            display: flex;
+            align-items: flex-start;
+            margin: 5px 0;
+            line-height: 1.5;
+        }
+        .response-item-bullet {
+            margin-right: 8px;
+            color: #00d4ff;
+            font-size: 1em;
+        }
+        .response-item-number {
+            margin-right: 8px;
+            color: #00d4ff;
+            font-size: 0.9em;
+            min-width: 15px;
+            text-align: right;
+        }
+        .response-item-text {
+            flex: 1;
+        }
+        .response-total {
+            font-style: italic;
+            color: #e0e0e0;
+            margin: 10px 0;
+        }
+        .response-link {
+            color: #00d4ff;
+            text-decoration: underline;
+            transition: color 0.2s ease;
+        }
+        .response-link:hover {
+            color: #00b0d4;
         }
         .loading {
             margin: 15px 0; /* Match the increased margin for consistency */
@@ -110,9 +160,10 @@
             color: #e0e0e0;
             font-size: 0.9em;
             resize: none; /* Prevent resizing */
-            min-height: 40px; /* Match the height of the previous input */
+            height: 40px; /* Fixed height to match previous input */
             line-height: 1.2; /* Match the line height for consistency */
             overflow-y: auto; /* Allow scrolling if needed */
+            box-sizing: border-box;
         }
         #user-input:focus {
             outline: none;
@@ -149,6 +200,57 @@
         const chatContainer = document.getElementById('chat-container');
         const userInput = document.getElementById('user-input');
 
+        // Store conversation history
+        let conversationHistory = [
+            { role: 'assistant', content: 'Product/package and region?' }
+        ];
+
+        function renderResponse(reply) {
+            const lines = reply.split('\n');
+            let html = '<strong>Easy Total:</strong><br>';
+            let currentSection = null;
+            let inItems = false;
+
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line) return;
+
+                if (line.startsWith('::Title:')) {
+                    const title = line.replace('::Title:', '').trim();
+                    html += `<div class="response-title">${title}</div>`;
+                } else if (line.startsWith('::Section:')) {
+                    currentSection = line.replace('::Section:', '').trim();
+                    inItems = false;
+                    html += `<div class="response-section"><div class="response-section-title">${currentSection}</div></div>`;
+                } else if (line.startsWith('::Items')) {
+                    inItems = true;
+                } else if (line.startsWith('::Total:')) {
+                    const total = line.replace('::Total:', '').trim();
+                    html += `<div class="response-total">Total: ${total}</div>`;
+                    inItems = false;
+                } else if (line.includes('|')) {
+                    const [label, ...rest] = line.split('|');
+                    const text = rest.join('|').trim();
+                    const numberMatch = label.match(/^\d+\s*$/);
+                    if (numberMatch) {
+                        const number = numberMatch[0].trim();
+                        html += `<div class="response-item"><span class="response-item-number">${number}.</span><span class="response-item-text">${text}</span></div>`;
+                    } else if (text.startsWith('Link:')) {
+                        const link = text.replace('Link:', '').trim();
+                        html += `<div class="response-item"><span class="response-item-text">${label} <a href="${link}" class="response-link" target="_blank">Click here</a></span></div>`;
+                    } else if (inItems) {
+                        html += `<div class="response-item"><span class="response-item-bullet">•</span><span class="response-item-text">${label}: ${text}</span></div>`;
+                    } else {
+                        html += `<div class="response-item"><span class="response-item-bullet">•</span><span class="response-item-text">${label}: ${text}</span></div>`;
+                    }
+                } else {
+                    html += `<div class="response-item"><span class="response-item-text">${line}</span></div>`;
+                }
+            });
+
+            return html;
+        }
+
         async function sendMessage() {
             const message = userInput.value.trim();
             if (!message) return;
@@ -156,6 +258,9 @@
             // Display user message
             chatContainer.innerHTML += `<div class="message user-message"><div class="message-content">${message}</div></div>`;
             userInput.value = '';
+
+            // Add user message to conversation history
+            conversationHistory.push({ role: 'user', content: message });
 
             // Show loading dots
             const loadingDiv = document.createElement('div');
@@ -169,17 +274,25 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ prompt: message })
+                    body: JSON.stringify({ 
+                        prompt: message,
+                        history: conversationHistory.slice(-5) // Limit to last 5 exchanges
+                    })
                 });
 
                 const data = await response.json();
                 const reply = data.reply;
 
+                // Add assistant response to conversation history
+                conversationHistory.push({ role: 'assistant', content: reply });
+
                 // Remove loading dots and display assistant response
                 loadingDiv.remove();
-                chatContainer.innerHTML += `<div class="message assistant-message"><div class="message-content"><strong>Easy Total:</strong>\n${reply}</div></div>`;
+                const renderedReply = renderResponse(reply);
+                chatContainer.innerHTML += `<div class="message assistant-message"><div class="message-content">${renderedReply}</div></div>`;
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             } catch (error) {
+                conversationHistory.push({ role: 'assistant', content: 'Failed to get response. Check network.' });
                 loadingDiv.remove();
                 chatContainer.innerHTML += `<div class="message assistant-message"><div class="message-content"><strong>Easy Total:</strong> Failed to get response. Check network.</div></div>`;
                 chatContainer.scrollTop = chatContainer.scrollHeight;
