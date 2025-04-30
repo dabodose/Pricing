@@ -41,7 +41,7 @@
                 {"region": "British Columbia", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 44.80},
                 {"region": "British Columbia", "products": ["Ukon DD"], "cost": 22.40},
                 {"region": "Manitoba", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 44.80},
-                {"region": "Manitoba", "products": ["Ukon DD"], "cost":    {"region": "Manitoba", "products": ["Ukon DD"], "cost": 22.40},
+                {"region": "Manitoba", "products": ["Ukon DD"], "cost": 22.40},
                 {"region": "Saskatchewan", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 44.40},
                 {"region": "Saskatchewan", "products": ["Ukon DD"], "cost": 22.20},
                 {"region": "Quebec", "products": ["K8", "Anespa", "Ukon Sigma"], "cost": 45.99},
