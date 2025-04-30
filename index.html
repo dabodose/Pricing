@@ -229,24 +229,31 @@
         ];
 
         function renderResponse(reply) {
+            console.log('Raw reply:', reply); // Debug: Log the raw reply
             const lines = reply.split('\n');
             let html = '';
             let currentSection = null;
             let inItems = false;
-            let financingPromptSeen = false;
             let financingPrompt = '';
 
-            lines.forEach(line => {
-                line = line.trim();
-                if (!line) return;
-
-                if (line.startsWith('::FinancingPrompt:')) {
-                    if (!financingPromptSeen) {
-                        financingPrompt = line.replace('::FinancingPrompt:', '').trim();
-                        financingPromptSeen = true;
+            // Process the reply to collect the financing prompt only once
+            const processedLines = [];
+            let financingPromptFound = false;
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (trimmedLine.startsWith('::FinancingPrompt:')) {
+                    if (!financingPromptFound) {
+                        financingPrompt = trimmedLine.replace('::FinancingPrompt:', '').trim();
+                        financingPromptFound = true;
                     }
-                    return;
+                    continue; // Skip adding the financing prompt line to processedLines
                 }
+                processedLines.push(trimmedLine);
+            }
+
+            // Render the processed lines
+            processedLines.forEach(line => {
+                if (!line) return;
 
                 if (line.startsWith('::Title:')) {
                     const title = line.replace('::Title:', '').trim();
@@ -281,10 +288,12 @@
                 }
             });
 
+            // Append the financing prompt only once
             if (financingPrompt) {
                 html += `<div class="response-item"><span class="response-item-text">${financingPrompt}</span></div>`;
             }
 
+            console.log('Rendered HTML:', html); // Debug: Log the rendered HTML
             return html;
         }
 
