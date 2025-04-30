@@ -83,8 +83,8 @@ export default async (req, res) => {
         let reply = data.choices[0]?.message?.content || 'No reply';
 
         // Check if the reply contains a total price (indicating a pricing response)
-        if (reply.includes('Total:') && !history.some(msg => msg.content.includes('Are you ready to find out how you can get this financed for $0 down?'))) {
-            reply += '\n\nAre you ready to find out how you can get this financed for $0 down?';
+        if (reply.includes('::Total:') && !history.some(msg => msg.content.includes('Are you ready to find out how you can get this financed for $0 down?'))) {
+            reply = reply.trim() + '\n\n::FinancingPrompt:Are you ready to find out how you can get this financed for $0 down?';
         }
 
         res.status(200).json({ reply: reply, status: 'success' });
