@@ -39,7 +39,7 @@
         }
         #chat-container {
             padding: 10px;
-            height: calc(100% - 110px); /* Adjust to fit within container */
+            height: calc(100% - 90px); /* Adjusted height to account for smaller input group */
             overflow-y: auto;
             background-color: #252525;
             font-size: 0.9em;
@@ -150,17 +150,19 @@
             gap: 10px;
             padding: 10px;
             background-color: #2f2f2f;
+            margin-bottom: 10px; /* Add margin to prevent touching the bottom */
         }
         #user-input {
             flex: 1;
-            padding: 8px;
+            padding: 6px; /* Reduced padding for smaller height */
             background-color: #3a3a3a;
             border: 1px solid #444;
             border-radius: 5px;
             color: #e0e0e0;
             font-size: 0.9em;
+            font-family: 'Poppins', sans-serif; /* Explicitly set font */
             resize: none; /* Prevent resizing */
-            height: 40px; /* Fixed height to match previous input */
+            height: 30px; /* Reduced height */
             line-height: 1.2; /* Match the line height for consistency */
             overflow-y: auto; /* Allow scrolling if needed */
             box-sizing: border-box;
@@ -169,8 +171,26 @@
             outline: none;
             border-color: #007bff;
         }
+        #user-input::-webkit-input-placeholder {
+            font-family: 'Poppins', sans-serif; /* Ensure placeholder uses Poppins */
+            color: #999;
+        }
+        #user-input:-moz-placeholder {
+            font-family: 'Poppins', sans-serif; /* For Firefox */
+            color: #999;
+            opacity: 1;
+        }
+        #user-input::-moz-placeholder {
+            font-family: 'Poppins', sans-serif; /* For Firefox */
+            color: #999;
+            opacity: 1;
+        }
+        #user-input:-ms-input-placeholder {
+            font-family: 'Poppins', sans-serif; /* For Edge */
+            color: #999;
+        }
         #send-btn {
-            padding: 8px 15px;
+            padding: 6px 12px; /* Reduced padding for smaller height */
             background-color: #007bff;
             color: #e0e0e0;
             border: none;
@@ -188,7 +208,7 @@
     <div class="container">
         <h2>Easy Total</h2>
         <div id="chat-container">
-            <div class="message assistant-message"><div class="message-content"><strong>Easy Total:</strong> Product/package and region?</div></div>
+            <div class="message assistant-message"><div class="message-content">Product/package and region?</div></div>
         </div>
         <div class="input-group">
             <textarea id="user-input" placeholder="E.g., Quad in Alberta"></textarea>
@@ -207,13 +227,19 @@
 
         function renderResponse(reply) {
             const lines = reply.split('\n');
-            let html = '<strong>Easy Total:</strong><br>';
+            let html = '';
             let currentSection = null;
             let inItems = false;
+            let financingPrompt = '';
 
             lines.forEach(line => {
                 line = line.trim();
                 if (!line) return;
+
+                if (line.startsWith('::FinancingPrompt:')) {
+                    financingPrompt = line.replace('::FinancingPrompt:', '').trim();
+                    return;
+                }
 
                 if (line.startsWith('::Title:')) {
                     const title = line.replace('::Title:', '').trim();
@@ -247,6 +273,10 @@
                     html += `<div class="response-item"><span class="response-item-text">${line}</span></div>`;
                 }
             });
+
+            if (financingPrompt) {
+                html += `<div class="response-item"><span class="response-item-text">${financingPrompt}</span></div>`;
+            }
 
             return html;
         }
@@ -294,7 +324,7 @@
             } catch (error) {
                 conversationHistory.push({ role: 'assistant', content: 'Failed to get response. Check network.' });
                 loadingDiv.remove();
-                chatContainer.innerHTML += `<div class="message assistant-message"><div class="message-content"><strong>Easy Total:</strong> Failed to get response. Check network.</div></div>`;
+                chatContainer.innerHTML += `<div class="message assistant-message"><div class="message-content">Failed to get response. Check network.</div></div>`;
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             }
         }
