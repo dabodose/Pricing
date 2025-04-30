@@ -64,7 +64,7 @@
             padding: 6px 10px;
             border-radius: 5px;
             display: inline-block; /* Adaptive sizing for content */
-            max-width: 100%; /* Allow full width for better formatting */
+            max-width: 70%;
         }
         .user-message {
             text-align: right; /* Align content to the right */
@@ -76,40 +76,6 @@
         .assistant-message .message-content {
             background-color: #333;
             white-space: pre-wrap;
-        }
-        /* Markdown Styling for Assistant Responses */
-        .assistant-message h1 {
-            font-size: 1.1em;
-            font-weight: 500;
-            margin: 15px 0 10px 0;
-            color: #ffffff;
-        }
-        .assistant-message ul {
-            padding-left: 20px;
-            margin: 5px 0;
-        }
-        .assistant-message ol {
-            padding-left: 20px;
-            margin: 5px 0;
-        }
-        .assistant-message li {
-            margin: 5px 0;
-            line-height: 1.5;
-        }
-        .assistant-message strong {
-            color: #ffffff;
-        }
-        .assistant-message em {
-            color: #e0e0e0;
-            font-style: italic;
-        }
-        .assistant-message a {
-            color: #00d4ff;
-            text-decoration: underline;
-            transition: color 0.2s ease;
-        }
-        .assistant-message a:hover {
-            color: #00b0d4;
         }
         .loading {
             margin: 15px 0; /* Match the increased margin for consistency */
@@ -144,10 +110,9 @@
             color: #e0e0e0;
             font-size: 0.9em;
             resize: none; /* Prevent resizing */
-            height: 40px; /* Fixed height to match previous input */
+            min-height: 40px; /* Match the height of the previous input */
             line-height: 1.2; /* Match the line height for consistency */
             overflow-y: auto; /* Allow scrolling if needed */
-            box-sizing: border-box;
         }
         #user-input:focus {
             outline: none;
@@ -184,11 +149,6 @@
         const chatContainer = document.getElementById('chat-container');
         const userInput = document.getElementById('user-input');
 
-        // Store conversation history
-        let conversationHistory = [
-            { role: 'assistant', content: 'Product/package and region?' }
-        ];
-
         async function sendMessage() {
             const message = userInput.value.trim();
             if (!message) return;
@@ -196,9 +156,6 @@
             // Display user message
             chatContainer.innerHTML += `<div class="message user-message"><div class="message-content">${message}</div></div>`;
             userInput.value = '';
-
-            // Add user message to conversation history
-            conversationHistory.push({ role: 'user', content: message });
 
             // Show loading dots
             const loadingDiv = document.createElement('div');
@@ -212,24 +169,17 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ 
-                        prompt: message,
-                        history: conversationHistory.slice(-5) // Limit to last 5 exchanges
-                    })
+                    body: JSON.stringify({ prompt: message })
                 });
 
                 const data = await response.json();
                 const reply = data.reply;
-
-                // Add assistant response to conversation history
-                conversationHistory.push({ role: 'assistant', content: reply });
 
                 // Remove loading dots and display assistant response
                 loadingDiv.remove();
                 chatContainer.innerHTML += `<div class="message assistant-message"><div class="message-content"><strong>Easy Total:</strong>\n${reply}</div></div>`;
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             } catch (error) {
-                conversationHistory.push({ role: 'assistant', content: 'Failed to get response. Check network.' });
                 loadingDiv.remove();
                 chatContainer.innerHTML += `<div class="message assistant-message"><div class="message-content"><strong>Easy Total:</strong> Failed to get response. Check network.</div></div>`;
                 chatContainer.scrollTop = chatContainer.scrollHeight;
