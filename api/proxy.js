@@ -83,14 +83,17 @@ export default async (req, res) => {
         let reply = data.choices[0]?.message?.content || 'No reply';
         const financingPromptText = 'Are you ready to find out how you can get this financed for $0 down?';
 
+        // Normalize the reply to avoid duplicate prompts due to formatting
+        const normalizedReply = reply.trim();
+
         // Check if the reply contains a total price (indicating a pricing response)
         // Ensure we only append the financing prompt once and only for pricing responses
         if (
-            reply.includes('::Total:') && 
-            !reply.includes(`::FinancingPrompt:${financingPromptText}`) && 
-            !history.some(msg => msg.content.includes(financingPromptText))
+            normalizedReply.includes('::Total:') && 
+            !normalizedReply.includes(financingPromptText) && 
+            !history.some(msg => msg.content.trim().includes(financingPromptText))
         ) {
-            reply = reply.trim() + `\n\n::FinancingPrompt:${financingPromptText}`;
+            reply = normalizedReply + `\n\n::FinancingPrompt:${financingPromptText}`;
         }
 
         res.status(200).json({ reply: reply, status: 'success' });
