@@ -39,7 +39,7 @@
         }
         #chat-container {
             padding: 10px;
-            height: calc(100% - 90px); /* Adjusted height to account for smaller input group */
+            height: calc(100% - 80px); /* Adjusted to account for smaller input group and container border */
             overflow-y: auto;
             background-color: #252525;
             font-size: 0.9em;
@@ -63,8 +63,8 @@
         .message-content {
             padding: 6px 10px;
             border-radius: 5px;
-            display: block; /* Full width for custom rendering */
-            max-width: 100%;
+            display: inline-block; /* Allow dynamic sizing */
+            max-width: 70%; /* Restore dynamic sizing */
         }
         .user-message {
             text-align: right; /* Align content to the right */
@@ -150,7 +150,7 @@
             gap: 10px;
             padding: 10px;
             background-color: #2f2f2f;
-            margin-bottom: 10px; /* Add margin to prevent touching the bottom */
+            margin-bottom: 5px; /* Reduced margin to bring it up */
         }
         #user-input {
             flex: 1;
@@ -162,7 +162,7 @@
             font-size: 0.9em;
             font-family: 'Poppins', sans-serif; /* Explicitly set font */
             resize: none; /* Prevent resizing */
-            height: 30px; /* Reduced height */
+            height: 30px; /* Keep height */
             line-height: 1.2; /* Match the line height for consistency */
             overflow-y: auto; /* Allow scrolling if needed */
             box-sizing: border-box;
@@ -208,7 +208,7 @@
     <div class="container">
         <h2>Easy Total</h2>
         <div id="chat-container">
-            <div class="message assistant-message"><div class="message-content">Product/package and region?</div></div>
+            <div class="message assistant-message"><div class="message-content">Enter product/package and Region</div></div>
         </div>
         <div class="input-group">
             <textarea id="user-input" placeholder="E.g., Quad in Alberta"></textarea>
@@ -222,7 +222,7 @@
 
         // Store conversation history
         let conversationHistory = [
-            { role: 'assistant', content: 'Product/package and region?' }
+            { role: 'assistant', content: 'Enter product/package and Region' }
         ];
 
         function renderResponse(reply) {
