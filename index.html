@@ -109,6 +109,11 @@
             border-radius: 5px;
             color: #e0e0e0;
             font-size: 0.9em;
+            resize: none; /* Prevent resizing */
+            height: 40px; /* Fixed height to match previous input */
+            line-height: 1.2; /* Match the line height for consistency */
+            overflow-y: auto; /* Allow scrolling if needed */
+            box-sizing: border-box;
         }
         #user-input:focus {
             outline: none;
@@ -136,7 +141,7 @@
             <div class="message assistant-message"><div class="message-content"><strong>Easy Total:</strong> Product/package and region?</div></div>
         </div>
         <div class="input-group">
-            <input type="text" id="user-input" placeholder="E.g., Quad in Alberta" />
+            <textarea id="user-input" placeholder="E.g., Quad in Alberta"></textarea>
             <button id="send-btn" onclick="sendMessage()">Send</button>
         </div>
     </div>
@@ -145,6 +150,11 @@
         const chatContainer = document.getElementById('chat-container');
         const userInput = document.getElementById('user-input');
 
+        // Store conversation history
+        let conversationHistory = [
+            { role: 'assistant', content: 'Product/package and region?' }
+        ];
+
         async function sendMessage() {
             const message = userInput.value.trim();
             if (!message) return;
@@ -152,6 +162,9 @@
             // Display user message
             chatContainer.innerHTML += `<div class="message user-message"><div class="message-content">${message}</div></div>`;
             userInput.value = '';
+
+            // Add user message to conversation history
+            conversationHistory.push({ role: 'user', content: message });
 
             // Show loading dots
             const loadingDiv = document.createElement('div');
@@ -165,26 +178,43 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ prompt: message })
+                    body: JSON.stringify({ 
+                        prompt: message,
+                        history: conversationHistory.slice(-5) // Limit to last 5 exchanges
+                    })
                 });
 
                 const data = await response.json();
                 const reply = data.reply;
+
+                // Add assistant response to conversation history
+                conversationHistory.push({ role: 'assistant', content: reply });
 
                 // Remove loading dots and display assistant response
                 loadingDiv.remove();
                 chatContainer.innerHTML += `<div class="message assistant-message"><div class="message-content"><strong>Easy Total:</strong>\n${reply}</div></div>`;
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             } catch (error) {
+                conversationHistory.push({ role: 'assistant', content: 'Failed to get response. Check network.' });
                 loadingDiv.remove();
                 chatContainer.innerHTML += `<div class="message assistant-message"><div class="message-content"><strong>Easy Total:</strong> Failed to get response. Check network.</div></div>`;
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             }
         }
 
-        // Allow sending message with Enter key
-        userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
+        // Handle Enter and Shift + Enter
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                if (e.shiftKey) {
+                    // Shift + Enter: Add a new line
+                    e.preventDefault();
+                    userInput.value += '\n';
+                } else {
+                    // Enter alone: Submit the prompt
+                    e.preventDefault();
+                    sendMessage();
+                }
+            }
         });
     </script>
 </body>
