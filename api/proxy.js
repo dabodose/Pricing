@@ -70,7 +70,7 @@ export default async (req, res) => {
                 'Authorization': `Bearer ${process.env.XAI_API_KEY}`
             },
             body: JSON.stringify({
-                model: 'grok-4-0709',
+                model: 'grok-3',
                 messages: [{ role: 'user', content: fullPrompt }],
                 max_tokens: 300
             })
